@@ -1,0 +1,58 @@
+/* src/App.css */
+
+body, html, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+.value-chain-container {
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 6px;
+}
+
+.sidebar-container {
+}
+
+.message-box {
+  padding: 5px;
+  font-size: 0.85rem;
+}
+
+.message-box .numbered-list {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .sidebar-container {
+    width: 20vw;
+  }
+  .main-chat-container {
+    width: 90vw;
+    margin-left: 25vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 23vw;
+  }
+  .main-chat-container {
+    width: 85vw;
+    margin-left: 35vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-container {
+    width: 26vw;
+  }
+  .main-chat-container {
+    width: 75vw;
+    margin-left: 30vw;
+  }
+}

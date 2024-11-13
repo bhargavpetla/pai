@@ -1,0 +1,13 @@
+pandas
+openpyxl
+sentence-transformers
+faiss-cpu
+python-dotenv
+nltk
+tqdm
+groq
+langchain==0.1.16
+langchain-core
+langchain-groq
+Flask
+flask-cors

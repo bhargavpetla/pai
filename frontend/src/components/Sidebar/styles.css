@@ -1,0 +1,10 @@
+/* src/components/Sidebar/styles.css */
+
+.sidebar-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    height: 80vh;
+    overflow-y: auto;
+  }
+  
