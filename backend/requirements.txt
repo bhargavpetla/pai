@@ -11,3 +11,4 @@ langchain-core
 langchain-groq
 Flask
 flask-cors
+gunicorn==20.1.0
