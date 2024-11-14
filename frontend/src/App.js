@@ -22,10 +22,10 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [recentChats, setRecentChats] = useState([]);
   const [suggestions, setSuggestions] = useState([
-    "Tell me about the Asset Reconstruction value chain.",
-    "What are some AI use cases in manufacturing?",
-    "How can AI improve customer service?",
-    "Show me AI use cases for Retail."
+    'Tell me about the Asset Reconstruction value chain.',
+    'What are some AI use cases in manufacturing?',
+    'How can AI improve customer service?',
+    'Show me AI use cases for Retail.',
   ]);
   const [imageResponse, setImageResponse] = useState(null);
 
@@ -33,26 +33,22 @@ const App = () => {
 
   // Load recent chats from localStorage on mount
   useEffect(() => {
-    try {
-      const storedChats = JSON.parse(localStorage.getItem('recentChats'));
-      if (storedChats) {
-        setRecentChats(storedChats.slice(0, MAX_RECENT_CHATS)); // Load only up to MAX_RECENT_CHATS
-      }
-    } catch (error) {
-      console.warn("Error loading recent chats from localStorage:", error);
+    const storedChats = localStorage.getItem('recentChats');
+    if (storedChats) {
+      setRecentChats(JSON.parse(storedChats).slice(0, MAX_RECENT_CHATS));
     }
   }, []);
 
   // Save recent chats to localStorage when recentChats changes
   useEffect(() => {
     try {
-      localStorage.setItem('recentChats', JSON.stringify(recentChats.slice(0, MAX_RECENT_CHATS))); // Save only up to MAX_RECENT_CHATS
+      localStorage.setItem('recentChats', JSON.stringify(recentChats.slice(0, MAX_RECENT_CHATS)));
     } catch (error) {
-      if (error.name === "QuotaExceededError") {
-        console.warn("localStorage quota exceeded; clearing recentChats.");
-        localStorage.removeItem('recentChats'); // Clear storage if quota is exceeded
+      if (error.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded; clearing recentChats.');
+        localStorage.removeItem('recentChats');
       } else {
-        console.error("Error saving recent chats to localStorage:", error);
+        console.error('Error saving recent chats to localStorage:', error);
       }
     }
   }, [recentChats]);
@@ -64,29 +60,29 @@ const App = () => {
 
     try {
       const response = await axios.post(`${backendUrl}/chat`, { message: text });
-      const botMessage = { sender: 'P(AI)', text: response.data.response };
+      const { response: botResponse, image } = response.data;
 
-      if (response.data.image) {
-        setImageResponse(response.data.image); // Display image if included
+      if (image) {
+        setImageResponse(image); // Display image if included
       } else {
         setImageResponse(null); // Clear any previous image response
       }
 
+      const botMessage = { sender: 'P(AI)', text: botResponse };
       setMessages((prev) => [...prev, botMessage]);
 
-      const chatTitle = text.length > 20 ? text.substring(0, 20) + '...' : text;
+      const chatTitle = text.length > 20 ? `${text.substring(0, 20)}...` : text;
       const timestamp = new Date().toLocaleString();
-      
+
       // Add to recentChats and limit its size
       setRecentChats((prev) => [
         { title: chatTitle, timestamp, messages: [userMessage, botMessage] },
-        ...prev.slice(0, MAX_RECENT_CHATS - 1) // Keep only up to MAX_RECENT_CHATS
+        ...prev.filter((chat) => chat.title !== chatTitle).slice(0, MAX_RECENT_CHATS - 1),
       ]);
     } catch (error) {
-      console.error(error);
-      const errorMsg = error.response && error.response.data && error.response.data.error
-        ? error.response.data.error
-        : 'Sorry, something went wrong. Please try again.';
+      console.error('Error in handleSend:', error);
+      const errorMsg =
+        error.response?.data?.error || 'Sorry, something went wrong. Please try again.';
       const errorMessage = { sender: 'P(AI)', text: errorMsg };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -97,7 +93,7 @@ const App = () => {
   const handleNewChat = async () => {
     setIsLoading(true);
     try {
-      await axios.post(`${backendUrl}/reset_chat`); 
+      await axios.post(`${backendUrl}/reset_chat`);
       setMessages([
         { sender: 'P(AI)', text: 'Hello! I am P(AI) bot. How can I assist you today?' },
         { sender: 'Description', text: 'Select a suggested question below or type your own to get started.' },
@@ -105,10 +101,9 @@ const App = () => {
       setRecentChats([]);
       setImageResponse(null); // Clear any displayed image on new chat
     } catch (error) {
-      console.error(error);
-      const errorMsg = error.response && error.response.data && error.response.data.error
-        ? error.response.data.error
-        : 'Failed to reset the conversation. Please try again.';
+      console.error('Error in handleNewChat:', error);
+      const errorMsg =
+        error.response?.data?.error || 'Failed to reset the conversation. Please try again.';
       const errorMessage = { sender: 'P(AI)', text: errorMsg };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -116,19 +111,22 @@ const App = () => {
     }
   };
 
-  const handleSuggestionSelect = async (suggestion) => {
+  const handleSuggestionSelect = (suggestion) => {
     handleSend(suggestion);
-
-    try {
-      const response = await axios.post(`${backendUrl}/suggestions`, { message: suggestion });
-      setSuggestions(response.data.suggestions);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-    }
+    // Fetch new suggestions after sending a message
+    axios
+      .post(`${backendUrl}/suggestions`, { message: suggestion })
+      .then((response) => {
+        setSuggestions(response.data.suggestions);
+      })
+      .catch((error) => {
+        console.error('Error fetching suggestions:', error);
+      });
   };
 
   const handleSelectRecentChat = (chat) => {
     setMessages(chat.messages);
+    setImageResponse(null); // Reset image when switching chats
   };
 
   return (
@@ -166,12 +164,17 @@ const App = () => {
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
           <Typography variant="h6" sx={{ color: '#f38168', fontWeight: 'bold', fontSize: '1.1rem' }}>
-          P(AI) bot
+            P(AI) bot
           </Typography>
           <NewChatButton onNewChat={handleNewChat} />
         </Box>
 
-        <Typography variant="body2" align="left" gutterBottom sx={{ color: '#a6a6a6', fontSize: '0.8rem', mb: 0.5 }}>
+        <Typography
+          variant="body2"
+          align="left"
+          gutterBottom
+          sx={{ color: '#a6a6a6', fontSize: '0.8rem', mb: 0.5 }}
+        >
           I can help you understand our value chains and AI use cases for various industries.
         </Typography>
 
